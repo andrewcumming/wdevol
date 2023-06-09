@@ -1,3 +1,8 @@
+eos.c
+
+
+# Python template from github:
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
