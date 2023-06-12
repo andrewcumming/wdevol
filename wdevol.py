@@ -500,7 +500,7 @@ while count < n_steps and time < max_time and m_solid/mass < 1.0:
     m_solid = mn_solid
     
     max_delta_lnT = np.max(np.abs((T-guess[3*ngrid:4*ngrid])/guess[3*ngrid:4*ngrid]))
-    max_delta_lnLX = 0.0
+    max_delta_lnLX = np.max(np.log(np.abs(LX))-np.log(np.abs(guess[4*ngrid:5*ngrid])))
     max_deltaX = np.max(np.abs((X-guess[5*ngrid:6*ngrid])))
     count +=1
     time += delta_t
@@ -515,7 +515,9 @@ while count < n_steps and time < max_time and m_solid/mass < 1.0:
     # output some information about the step
     print('Step %d, time=%lg Gyr:' % (count,time/secperyear/1e9))
     print('Timestep: %g yrs' % (delta_t/secperyear))
-    print('Residual: %g; max lnT change: %g; max X change: %g, max LX change: %g' % (abs(res).max(), max_delta_lnT, max_deltaX, max_delta_lnLX))
+    print('Residual: %g; max lnT change: %g; max X change: %g, max LX change: %g' % (abs(res).max(), max_delta_lnT, max_deltaX, max_delta_lnLX,))
+    if dm_solid>0.0:
+        print('dm/m_solid: %g' % (dm_solid/m_solid,))
     print('R_9= ', r[-1]/1e9)
     print('rho_c,6, T_c,6, P_c,23  = ', rho[0]/1e6, T[0]/1e6, P[0]/1e23)
     print('L = ', L[-1]/Lsun, ' Lsun')
@@ -534,7 +536,7 @@ while count < n_steps and time < max_time and m_solid/mass < 1.0:
     if dm_solid > 0.0:
         delta_t3 = delta_t * 0.1 * m_solid/dm_solid        
     if max_delta_lnLX > 0.0:
-        delta_t4 = delta_t * 0.03/max_delta_lnLX
+        delta_t4 = delta_t * 0.3/max_delta_lnLX
     #if dm_solid>0.0:
     #delta_t = min(1e6*secperyear,delta_t1,delta_t2,delta_t3)
     #else:
