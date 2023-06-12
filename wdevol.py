@@ -87,16 +87,18 @@ def residual(y):
     if delta_t == 0.0:   # we're trying to find the initial model, so assume uniform eps_grav
         eps_grav = np.ones_like(Pn) * (Ltop0/mass)
         L_surf = Ltop0
-        T_surf = Ttop(Ltop0)
+        T_surf = 10**Ttop_interp(np.log10(Ltop0/Lsun))
         eps_X = np.ones_like(Xn) * (LXn[-1]/mass)
     else:  # compute eps_grav based on the timestep
         dT = Tn-T
         drho = rhon-rho
         dX = Xn-X
+        
+        T_surf = 10**Ttop_interp(np.log10(Ln[-1]/Lsun))
+        
         # In the next line, we set (1-chi_T del_ad)\approx 1 in the dT/dt term
         # and approximate chi_rho=4/3 and del_ad=1/3 in the drho/dt term
         eps_grav = -CP * dT / delta_t + (1/3)*(4/3)*CP*(Tn/rhon)*drho/delta_t
-        T_surf = Ttop(Ln[-1])
         eps_X = - dX/delta_t
     
         # solid core mass  
@@ -271,9 +273,17 @@ KX_factor = 1e3  # factor by which the diffusion is larger in the liquid phase
 # pressure at outer boundary
 P_0 = 1e21
 
+# Read in the Ltop-Ttop relation, L(T) at P=1e21 cgs
+# These are tabulated from MESA for masses 0.3, 0.4... 0.9, 1.0 solar masses
+line_to_read = int((mass-0.3)/0.1)
+Ttop_vals = np.loadtxt('data/Tb21.txt', skiprows=2, max_rows=1, delimiter=',')
+Ltop_vals = np.loadtxt('data/log_L21.txt', skiprows=2, max_rows=1, delimiter=',')
+Ttop_interp = interpolate.interp1d(Ltop_vals,Ttop_vals)
+print(Ltop_vals, Ttop_vals)
+
 # initial luminosity and corresponding temperature at the outer boundary
 Ltop0 = 1e-3 * Lsun
-Ttop0 = Ttop(Ltop0)
+Ttop0 = 10**Ttop_interp(np.log10(Ltop0/Lsun))
 
 # store the time history
 time = 0.0
@@ -282,6 +292,8 @@ t_hist = np.array([time])
 res_hist = np.array([])
 deltat_hist = np.array([])
 model_hist = np.array([1])
+
+# ----------------------------------------------------------------------------
 
 print('----------- Looking for initial model -------------')
 
@@ -455,7 +467,7 @@ fig.canvas.draw()
 
 # now take time steps
 n_steps = 1000
-max_time = 20e9*secperyear
+max_time = 9e9*secperyear
 
 count = 1
 
@@ -466,7 +478,7 @@ while count < n_steps and time < max_time and m_solid/mass < 1.0:
     sol = optimize.root(residual, guess, method='lm') 
     res = residual(sol.x)
     
-    while abs(res).max() > 1e-3:
+    while abs(res).max() > 1e-5:
         print('Tried timestep %g; residual: %g, trying again with (1/3)*timestep' % (delta_t / secperyear, abs(res).max(),)) 
         delta_t = delta_t / 3       
         sol = optimize.root(residual, guess, method='lm') 

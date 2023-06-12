@@ -59,12 +59,12 @@ def gamma_av(double rho, double T, double X):
     Z53 = Z53 / Yi(X)
     return 2.27e5*rho**(1.0/3.0)/T * Z53 * Ye(X)**(1.0/3.0)
 
-def Ltop(double T):
-    return 2e6 * T**3.5  # Using eq. 4.1.12 for Mestel cooling law from Shapiro & Teukolsky, drop mass factor
-    # Mochkovitch (1983) has a formula from van Horn (1968)
-    #return 1e-5*Lsun*(M/Msun)*(T/1e6)**2.7
+#def Ltop(double T):
+#    return 2e6 * T**3.5  # Using eq. 4.1.12 for Mestel cooling law from Shapiro & Teukolsky, drop mass factor
+#    # Mochkovitch (1983) has a formula from van Horn (1968)
+#    #return 1e-5*Lsun*(M/Msun)*(T/1e6)**2.7
 
-def Ttop(double L):
-    return (L/2e6)**(2.0/7.0)
+#def Ttop(double L):
+#    return (L/2e6)**(2.0/7.0)
 
 
