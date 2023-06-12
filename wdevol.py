@@ -80,6 +80,8 @@ def residual(y):
     dm12 = np.append(dm12,dm[-1])
     r12 = 0.5 * (rn[1:] + rn[:-1])
     rho12 = 0.5 * (rhon[1:] + rhon[:-1])
+    P12 = 0.5 * (Pn[1:] + Pn[:-1])
+    X12 = 0.5 * (Xn[1:] + Xn[:-1])
     K12 = 0.5 * (K[1:] + K[:-1])
 
     mn_solid=0.0
@@ -151,7 +153,7 @@ def residual(y):
     KX12 = 0.5 * (KX[1:] + KX[:-1])
     
     # enhanced diffusion in the liquid phase
-    ind = m12 > mn_solid
+    ind = m12 >= mn_solid
     KX12[ind] = KX_factor * KX_scale * (1.0 - ((m12[ind]-mn_solid)/(mass-mn_solid))**2)
           
     # hydrostatic balance
@@ -187,7 +189,13 @@ def residual(y):
     
     # X
     f7 = np.zeros_like(Xn)
-    f7[1:] = Xn[1:]-Xn[:-1] + dm12 * LXn[1:] / ((4*np.pi*rn[1:]**2)**2 * KX12 * rho12)
+    
+    delx = (LXn[1:]/mn[1:]) * P12 / (4.0*np.pi*Ggrav * rho12 * KX12 * X12)
+    delx[mn[1:]>=mn_solid] = np.minimum(delx[mn[1:]>=mn_solid], 0.01)
+    f7[1:] = Xn[1:]-Xn[:-1] + dm12 * delx * (X12/P12) * Ggrav * mn[1:] / (4*np.pi * rn[1:]**4)
+
+    #f7[1:] = Xn[1:]-Xn[:-1] + dm12 * LXn[1:] / ((4*np.pi*rn[1:]**2)**2 * KX12 * rho12)
+    
     f7[0] = Xn[-1] - X_interp(mass)
 
     if delta_t == 0.0:
