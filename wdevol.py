@@ -112,7 +112,7 @@ def residual(y):
                 gamma[i] = gamma_av(rhon[i], Tn[i], Xn[i])
             gamma_interp = interpolate.interp1d(gamma, mn/mass)
             mn_solid = mass * gamma_interp(gamma_melt)
-            QL = 0.8 * (Xn/12 + (1-Xn)/16) * Tn * (1.38e-16/1.67e-24)
+            QL = 0.77 * (Xn/12 + (1-Xn)/16) * Tn * (1.38e-16/1.67e-24)
             QX = -np.ones_like(QL) * DXc * np.minimum(20*mn_solid/mass, 1.0)
             #QX = np.zeros_like(QL)  # turn off chemical separation
             
@@ -122,41 +122,31 @@ def residual(y):
             
             nliq = 4 # number of cells in the liquid that receive the light elements
             #print("Solid formed in cells: ", ind)
-            if len(ind)>1:   # more than one cell found 
-                #print('>one cell')
-                eps_grav[ind[:-1]] += QL[ind[:-1]]/delta_t
-                eps_X[ind[:-1]] += QX[ind[:-1]]/delta_t
-                ii = ind[0]-1
-                if ii>=0:
-                    eps_grav[ii] += QL[ii]/delta_t * (m[ii+1]-m_solid)/dm[ii]
-                    eps_X[ii] += QX[ii]/delta_t * (m[ii+1]-m_solid)/dm[ii]
-                ii = ind[-1]+1
-                # and put the light elements back in the liquid
-                eps_X[ii:ii+nliq] += -QX[ii:ii+nliq]/delta_t * (mn_solid-m_solid)/np.sum(dm[ii:ii+nliq])
-                
-            elif len(ind) == 1:  # only one cell found
-                ii = ind[-1]
-                eps_grav[ii] += QL[ii]/delta_t * (mn_solid-m[ii])/dm[ii]
-                eps_X[ii] += QX[ii]/delta_t * (mn_solid-m[ii])/dm[ii]
-                #print('one cell %g', ii, eps_X[0], mn_solid, m[ii], dm[ii], eps_X[0]*dm[ii]/LXn[1])
-                if ii>0:
-                    eps_grav[ii-1] += QL[ii-1]/delta_t * (m[ii]-m_solid)/dm[ii-1]
-                    eps_X[ii-1] += QX[ii-1]/delta_t * (m[ii]-m_solid)/dm[ii-1]
-                    
-                # and put the light elements back in the liquid
-                eps_X[ii+1:ii+1+nliq] += -QX[ii+1:ii+1+nliq]/delta_t * (mn_solid-m_solid)/(np.sum(dm[ii+1:ii+1+nliq]))
-                                   
-            elif len(ind)==0:   # no cells match, so the solid was formed inside one cell
+            if len(ind)==0:   # no cells match, so the solid was formed inside one cell
                 #print('no cell')
-                ind = np.where(m<m_solid)
+                ind = np.where(m<mn_solid)
                 ind = ind[0]
                 ii = ind[-1]
                 eps_grav[ii] += QL[ii]/delta_t * (mn_solid-m_solid)/dm[ii]
-                # don't need to change X because no net change of light elements in the cell
                 eps_X[ii] += QX[ii]/delta_t * (mn_solid-m_solid)/dm[ii]
-                
+                # liquid region                
                 eps_X[ii+1:ii+1+nliq] += -QX[ii+1:ii+1+nliq]/delta_t * (mn_solid-m_solid)/(np.sum(dm[ii+1:ii+1+nliq]))
-                
+            else:
+                #first cell
+                ii = ind[0]
+                if ii>0:
+                    eps_grav[ii-1] += QL[ii-1]/delta_t * (m[ii]-m_solid)/dm[ii-1]
+                    eps_X[ii-1] += QX[ii-1]/delta_t * (m[ii]-m_solid)/dm[ii-1]
+                # middle cells if needed
+                if len(ind)>1:
+                    eps_grav[ind[:-1]] += QL[ind[:-1]]/delta_t
+                    eps_X[ind[:-1]] += QX[ind[:-1]]/delta_t
+                # last cell
+                ii = ind[-1]
+                eps_grav[ii] += QL[ii]/delta_t * (mn_solid-m[ii])/dm[ii]
+                eps_X[ii] += QX[ii]/delta_t * (mn_solid-m[ii])/dm[ii]
+                # and put the light elements back in the liquid
+                eps_X[ii+1:ii+1+nliq] += -QX[ii+1:ii+1+nliq]/delta_t * (mn_solid-m_solid)/(np.sum(dm[ii+1:ii+1+nliq]))
                   
     KX12 = 0.5 * (KX[1:] + KX[:-1])
     
