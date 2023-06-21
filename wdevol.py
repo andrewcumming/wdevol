@@ -265,8 +265,8 @@ Xvec = 0.5 + 1e-3 * mvec
 #Xvec = 0.5 + 0.0001 * (1.0 - mvec**2)
 X_interp = interpolate.interp1d(mvec,Xvec,bounds_error=False, fill_value = (Xvec[0],Xvec[-1]))
 
-KX_scale = 1e3 # 1e6 gives a diffusion time ~ Hubble time
-KX_factor = 1e3  # factor by which the diffusion is larger in the liquid phase
+KX_scale = 1e4 # 1e6 gives a diffusion time ~ Hubble time
+KX_factor = 1e2  # factor by which the diffusion is larger in the liquid phase
 
 # pressure at outer boundary
 P_0 = 1e21
